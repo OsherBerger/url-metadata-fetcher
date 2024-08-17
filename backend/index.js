@@ -2,7 +2,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-
+const cors = require('cors');  // Import the cors package
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -10,6 +10,9 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -36,6 +39,12 @@ app.post('/fetch-metadata', async (req, res) => {
   for (const url of urls) {
     try {
       const response = await axios.get(url);
+
+      if (response.status !== 200) {
+        results.push({ url, error: `Failed to fetch metadata. Status code: ${response.status}` });
+        continue;
+      }
+
       const html = response.data;
       const $ = cheerio.load(html);
 
@@ -45,13 +54,28 @@ app.post('/fetch-metadata', async (req, res) => {
 
       results.push({ url, title, description, image });
     } catch (error) {
-      results.push({ url, error: 'Could not retrieve metadata.' });
+      console.error(`Error fetching metadata for ${url}:`, error.message);
+      results.push({ url, error: error.message || 'Could not retrieve metadata.' });
     }
   }
 
   res.json(results);
 });
 
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received. Closing server.');
+  server.close(() => {
+    console.log('Server closed.');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received. Closing server.');
+  server.close(() => {
+    console.log('Server closed.');
+  });
+});
