@@ -1,8 +1,8 @@
 # How to get the project to your computer:
-  Copy & paste the following commands to your (Linux) terminal:
+  Run the following command to your (Linux) terminal:
     git clone https://github.com/OsherBerger/url-metadata-fetcher.git
  
-# how to run the url-metadata-fetcher:
+# How to run the url-metadata-fetcher: 
 To run the server, open a terminal on the backend folder and type the command: node index.js
 To run the client, open a terminal on the frontend folder and type the command: npm start
 
